@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mall_tiny.modules.ums.mapper.UmsMenuMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.mall_tiny.modules.ums.model.UmsMenu">
+        <id column="id" property="id" />
+        <result column="parent_id" property="parentId" />
+        <result column="create_time" property="createTime" />
+        <result column="title" property="title" />
+        <result column="level" property="level" />
+        <result column="sort" property="sort" />
+        <result column="name" property="name" />
+        <result column="icon" property="icon" />
+        <result column="hidden" property="hidden" />
+    </resultMap>
+    <select id="getMenuList" resultType="com.mall_tiny.modules.ums.model.UmsMenu">
+        select distinct um.*
+        from ums_admin_role_relation uarr
+        left join ums_role_menu_relation urmr on uarr.role_id = urmr.role_id
+        left join ums_menu um on urmr.menu_id = um.id
+        where uarr.admin_id = #{adminId} and um.id is not null
+    </select>
+
+    <select id="getMenuListByRoleId" resultType="com.mall_tiny.modules.ums.model.UmsMenu">
+        select distinct um.*
+        from ums_role_menu_relation urmr
+        left join ums_menu um on urmr.menu_id = um.id
+        where urmr.role_id = #{roleId} and um.id is not null
+    </select>
+
+</mapper>

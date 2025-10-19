@@ -1,0 +1,28 @@
+package com.mall_tiny.modules.ums.mapper;
+
+import com.mall_tiny.modules.ums.model.UmsResource;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+/**
+ * <p>
+ * 后台资源表 Mapper 接口
+ * </p>
+ *
+ * @author baosight
+ * @since 2024-09-13
+ */
+public interface UmsResourceMapper extends BaseMapper<UmsResource> {
+
+    /**
+     * 根据用户id，获取用户所有可访问资源
+     */
+    List<UmsResource> getResourceList(@Param("adminId") Long adminId);
+
+    /**
+     * 根据角色id，获取角色所有可访问资源
+     */
+    List<UmsResource> getResourceListByRoleId(@Param("roleId") Long roleId);
+}

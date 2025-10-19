@@ -1,0 +1,43 @@
+server:
+  port: 8888
+  address: 0.0.0.0
+
+spring:
+  application:
+    name: mall_tiny
+  profiles:
+    active: dev
+#  main:
+#    allow-circular-references: true
+#    banner-mode: off # 关闭SpringBoot启动图标(banner)
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl #打印SQL日志到控制台
+    auto-mapping-behavior: partial
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: off # 关闭mybatisplus启动图标
+    db-config:
+      id-type: auto
+  mapper-locations: classpath:/mapper/**/*.xml
+
+jwt:
+  tokenHeader: Authorization # JWT存储的请求头
+  secret: mall_admin_secret # JW他加密使用的密钥
+  expiration: 604800 # JWT的超期时间（60*60*24*7）
+  tokenHead: 'Bearer ' # JWT负载中拿到的开头
+
+redis:
+  database: mall
+  key:
+    admin: 'ums:admin'
+    resourceList: 'ums:resourceList'
+  expire:
+    common: 86400 # (60*60*24)
+
+
+

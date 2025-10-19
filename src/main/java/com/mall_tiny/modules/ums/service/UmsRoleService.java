@@ -1,0 +1,63 @@
+package com.mall_tiny.modules.ums.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mall_tiny.modules.ums.model.UmsMenu;
+import com.mall_tiny.modules.ums.model.UmsResource;
+import com.mall_tiny.modules.ums.model.UmsRole;
+import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * <p>
+ * 后台用户角色表 服务类
+ * </p>
+ *
+ * @author baosight
+ * @since 2024-09-13
+ */
+public interface UmsRoleService extends IService<UmsRole> {
+
+    /**
+     * 添加角色
+     */
+    boolean create(UmsRole role);
+
+    /**
+     * 批量删除角色
+     */
+    boolean delete(List<Long> ids);
+
+    /**
+     * 分页获取角色列表
+     */
+    Page<UmsRole> list(String keyword, Integer pageSize, Integer pageNum);
+
+    /**
+     * 根据管理员ID获取对于目录
+     */
+    List<UmsMenu> getMenuList(Long adminId);
+
+    /**
+     * 获取角色相关目录
+     */
+    List<UmsMenu> listMenu(Long roleId);
+
+    /**
+     * 获取角色相关资源
+     */
+    List<UmsResource> listResource(Long roleId);
+
+    /**
+     * 给角色分配目录
+     */
+    @Transactional
+    int allocMenu(Long roleId, List<Long> menuIds);
+
+    /**
+     * 给角色分配资源
+     */
+    @Transactional
+    int allocResource(Long roleId, List<Long> resourceIds);
+}

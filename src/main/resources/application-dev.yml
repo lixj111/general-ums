@@ -1,0 +1,18 @@
+spring:
+  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    url: jdbc:mysql://localhost:3306/mall_tiny?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    password: 123456
+#    type: com.alibaba.druid.pool.DruidDataSource
+  redis:
+    host: localhost # Redis服务器地址
+    database: 0 # Redis数据库索引（默认为0）
+    port: 6379 #Redis连接端口
+    password: # Redis服务器连接地址（默认为空）
+    timeout: 3000ms # 连接超时时间（毫秒）
+
+logging:
+  level:
+    root: info
+    com.mall_tiny: debug
