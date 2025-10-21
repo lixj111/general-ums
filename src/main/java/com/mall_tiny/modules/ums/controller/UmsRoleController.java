@@ -27,7 +27,7 @@ import java.util.List;
  * @since 2024-09-13
  */
 @RestController
-@Api(value = "UmsRoleController")
+@Api(tags = "UmsRoleController")
 @Tag(name = "UmsRoleController", description = "后台用户角色管理")
 @RequestMapping("/role")
 public class UmsRoleController {

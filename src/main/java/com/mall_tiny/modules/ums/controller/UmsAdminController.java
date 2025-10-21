@@ -56,11 +56,13 @@ public class UmsAdminController {
     @ApiOperation(value = "用户注册")
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     public CommonResult<UmsAdmin> register(@Validated @RequestBody UmsAdminParam umsAdminParam) {
+        System.out.println(umsAdminParam);
         UmsAdmin umsAdmin = umsAdminService.register(umsAdminParam);
         if (umsAdmin == null) {
             return CommonResult.failed();
         }
         return CommonResult.success(umsAdmin);
+//        return CommonResult.success(null);
     }
 
     @ApiOperation(value = "登录，并返回token")
@@ -82,6 +84,8 @@ public class UmsAdminController {
     @RequestMapping(value = "/refreshToken", method = RequestMethod.GET)
     public CommonResult refreshToken(HttpServletRequest request) {
         String token = request.getHeader(tokenHeader);
+//        String token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0IiwiY3JlYXRlZCI6MTc2MDg3NjA2MDMxNiwiZXhwIjoxNzYxNDgwODYwfQ.Usz2cJBbq8Iac-YfuYDRDMcdGiLML9DhVuLzajSLqWZP11ZkY0EO1xFVT-o_72pEyiosmHFnuMa1PMtmn2vOQQ";
+
         System.out.println(token);
         String refreshToken = umsAdminService.refreshToken(token);
         if (refreshToken == null) {
@@ -116,6 +120,7 @@ public class UmsAdminController {
     @ApiOperation(value = "登出功能")
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
     public CommonResult logout() {
+        // 不执行任何操作？？？
         return CommonResult.success(null);
     }
 
@@ -145,7 +150,7 @@ public class UmsAdminController {
         return CommonResult.failed();
     }
 
-    @ApiOperation(value = "修改制定用户密码")
+    @ApiOperation(value = "修改指定用户密码")
     @RequestMapping(value = "/updatePassword", method = RequestMethod.POST)
     public CommonResult updatePassword(@Validated @RequestBody UpdateAdminPasswordParam updateAdminPasswordParam) {
         int status = umsAdminService.updatePassword(updateAdminPasswordParam);
@@ -196,7 +201,7 @@ public class UmsAdminController {
     }
 
     @ApiOperation(value = "获取指定用户的角色")
-    @RequestMapping(value = "/role/{adminId}")
+    @RequestMapping(value = "/role/{adminId}", method = RequestMethod.GET)
     public CommonResult<List<UmsRole>> getRoleList(@PathVariable Long adminId) {
         List<UmsRole> roleList = umsAdminService.getRoleList(adminId);
         return CommonResult.success(roleList);

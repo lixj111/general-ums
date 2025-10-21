@@ -36,6 +36,13 @@ public class CommonSecurityConfig {
         urls.add("/admin/login");
         urls.add("/admin/refreshToken");
         urls.add("/admin/logout");
+        urls.add("/swagger-ui/**");
+        urls.add("/swagger-resources/**");
+        urls.add("/.well-known/**");
+        urls.add("/v2/api-docs");
+        urls.add("/v2/api-docs/**");
+        urls.add("/webjars/**");
+        urls.add("/error");
         ignoreUrlsConfig.setUrls(urls);
         return ignoreUrlsConfig ;
     }

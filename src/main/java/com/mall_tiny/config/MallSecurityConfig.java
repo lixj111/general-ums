@@ -44,7 +44,7 @@ public class MallSecurityConfig {
                 for (UmsResource resource : resourceList) {
                     map.put(resource.getUrl(), new SecurityConfig(resource.getId() + ":" + resource.getName()));
                 }
-                // TODO：/productAttribute/** 该键重复，待修改
+                // TODO：/productAttribute/** 该键重复，无需修改
                 return map; // 共27个元素
             }
         };

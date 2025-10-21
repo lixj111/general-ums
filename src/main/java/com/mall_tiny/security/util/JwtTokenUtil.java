@@ -101,6 +101,8 @@ public class JwtTokenUtil {
     public boolean validateToken(String token, UserDetails userDetails) {
         String username = getUserNameFromToken(token);
         // 1. token未失效；2. 用户名相同
+        // System.out.println(!isTokenExpired(token));
+        // System.out.println(userDetails.getUsername());
         return !isTokenExpired(token) && username.equals(userDetails.getUsername());
     }
 
@@ -186,6 +188,9 @@ public class JwtTokenUtil {
         admin.setId(16L);
         admin.setUsername("test");
         UserDetails userDetails = new AdminUserDetails(admin, resourceList);
+
+        // validateToken ：token过期之后，无法获取username，函数执行会报错：NullPointException。
+        // 实际调用终会先检查 username 的有效性
         boolean result = jwtTokenUtil.validateToken(token, userDetails);
         System.out.println("result: " + result);
     }

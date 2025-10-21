@@ -24,7 +24,7 @@ import java.util.List;
  */
 @RestController
 @Api(tags = "UmsMenuController")
-@Tag(name = "UmsController", description = "后台目录管理")
+@Tag(name = "UmsMenuController", description = "后台目录管理")
 @RequestMapping("/menu")
 public class UmsMenuController {
 

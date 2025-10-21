@@ -46,7 +46,7 @@ public class UmsResourceServiceImpl extends ServiceImpl<UmsResourceMapper, UmsRe
     public boolean delete(Long id) {
         boolean success = removeById(id);
         adminCacheService.delResourceListByResource(id);
-        return false;
+        return success;
     }
 
     @Override

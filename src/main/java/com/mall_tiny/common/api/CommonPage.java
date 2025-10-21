@@ -23,7 +23,13 @@ public class CommonPage<T> {
         result.setPageNum(Convert.toInt(pageResult.getCurrent()));
         result.setPageSize(Convert.toInt(pageResult.getSize()));
         result.setTotal(pageResult.getTotal());
-        result.setTotalPage(Convert.toInt(pageResult.getTotal()/pageResult.getSize() + 1));
+        // TODO：setTotalPage()--不应该是（商+1）后取整，会出现整除后+1多一页的情况；例5/5+1=2
+//        result.setTotalPage(Convert.toInt(pageResult.getTotal()/pageResult.getSize() + 1));
+        if (pageResult.getTotal() % pageResult.getSize() == 0) {
+            result.setTotalPage(Convert.toInt(pageResult.getTotal()/pageResult.getSize()));
+        } else {
+            result.setTotalPage(Convert.toInt(pageResult.getTotal()/pageResult.getSize() + 1));
+        }
         result.setList(pageResult.getRecords());
         return result;
     }

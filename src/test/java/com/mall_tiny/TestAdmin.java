@@ -12,7 +12,9 @@ import com.mall_tiny.modules.ums.model.UmsResource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +33,7 @@ public class TestAdmin {
 
     @Test
     void testRegister() {
-        // 注册用户
+        // 注册用户，不涉及token
         UmsAdminParam umsAdminParam = new UmsAdminParam();
 //        umsAdminParam.setUsername("test");
 //        umsAdminParam.setPassword("123456");
@@ -50,6 +52,7 @@ public class TestAdmin {
 
     @Test
     void testLogin() {
+        // pass
         UmsAdminLoginParam loginParam = new UmsAdminLoginParam();
         loginParam.setUsername("test");
         loginParam.setPassword("123456");
@@ -59,7 +62,7 @@ public class TestAdmin {
 
     @Test
     void testRefreshToken() {
-
+        // pass
     }
 
     @Test
@@ -84,10 +87,11 @@ public class TestAdmin {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("sub", "test");
-//        claims.put("created", new Date())
-        claims.put("created", 1732860097871L);
-//        Long exp = new Date(System.currentTimeMillis() + 604800 * 1000).getTime()/1000; // 令牌过期时间为当前时间后7天
-        claims.put("exp", 1733464897L);
+        claims.put("created", new Date());
+//        claims.put("created", 1732860097871L);
+        Long exp = new Date(System.currentTimeMillis() + 604800 * 1000).getTime()/1000; // 令牌过期时间为当前时间后7天
+//        claims.put("exp", 1733464897L);
+        claims.put("exp", exp);
         String jwt = TestGenerateJwt.generateJwt(claims);
         System.out.println("Generated JWT: " + jwt);
 

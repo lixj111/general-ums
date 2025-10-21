@@ -179,7 +179,7 @@ public class UmsAdminServiceImpl extends ServiceImpl<UmsAdminMapper, UmsAdmin> i
         return page(page, wrapper);
     }
 
-    // TODO: 修改用户信息，但是实际只修改了，用户密码
+    // 修改用户信息，用于修改用户的普通信息（也可同时更新密码）
     @Override
     public boolean update(Long id, UmsAdmin admin) {
         admin.setId(id);
@@ -189,7 +189,6 @@ public class UmsAdminServiceImpl extends ServiceImpl<UmsAdminMapper, UmsAdmin> i
             admin.setPassword(null);
         } else {
             // 与原加密密码不同的，需要加密修改
-            // TODO: 下一行这个判断是否多余
             if (StrUtil.isEmpty(admin.getPassword())) {
                 admin.setPassword(null);
             } else {
@@ -199,7 +198,7 @@ public class UmsAdminServiceImpl extends ServiceImpl<UmsAdminMapper, UmsAdmin> i
         boolean success = updateById(admin);
         // 修改密码之后删除用户缓存
         getCacheService().delAdmin(id);
-        return false;
+        return success;
     }
 
     @Override

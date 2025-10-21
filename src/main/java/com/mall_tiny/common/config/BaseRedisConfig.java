@@ -7,11 +7,17 @@ import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator
 import com.mall_tiny.common.service.RedisService;
 import com.mall_tiny.common.service.impl.RedisServiceImpl;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
 
 public class BaseRedisConfig {
 
@@ -31,7 +37,7 @@ public class BaseRedisConfig {
          */
         redisTemplate.setConnectionFactory(redisConnectionFactory);
 
-        // 设置键值对的序列化器，这里仅设置了普通键值对、Hash结构的序列化器。未设置Set结构、List结构
+        // 设置键值对的序列化器，这里仅设置了普通键值对、Hash结构的序列化器。未设置Set结构、List结构(该项目为使用到这两种结构)
         // StringRedisSerializer():用于将字符串类型的键和哈希键序列化为字节流
         // serializer：基于Jackson库的自定义Redis序列化器，能够对Java对象进行序列化和反序列化
         redisTemplate.setKeySerializer(new StringRedisSerializer());
@@ -44,7 +50,6 @@ public class BaseRedisConfig {
     }
 
 //    @Bean
-
     /**
      * 序列化器的作用是将Java对象转化为Redis中的字节流，或将Redis中读取的字节流转为Java对象
      */
@@ -61,6 +66,15 @@ public class BaseRedisConfig {
         objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL);
         serializer.setObjectMapper(objectMapper);
         return serializer;
+    }
+
+    @Bean
+    public RedisCacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
+        RedisCacheWriter redisCacheWriter = RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory);
+        //设置Redis缓存有效期为1天
+        RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(redisSerializer())).entryTtl(Duration.ofDays(1));
+        return new RedisCacheManager(redisCacheWriter, redisCacheConfiguration);
     }
 
     @Bean

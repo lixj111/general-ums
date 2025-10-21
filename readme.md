@@ -241,7 +241,6 @@ public class CommonResult<T> {
   private RedisService redisService;
   ```
 
-
 **项目中Bean的注册管理详情**：
 
 ```txt
@@ -297,7 +296,7 @@ jwt = jwt + '.' + Signature_Algorithm(jwt, secret)
 ```
 
 ```txt
-实例：
+实例：（2024-11-29 14:01:37.871）
 header：{"alg":"HS512"}  --base64-->  eyJhbGciOiJIUzUxMiJ9
 payload：{"sub":"test","created":1732860097871,"exp":1733464897} --base64--> eyJzdWIiOiJ0ZXN0IiwiY3JlYXRlZCI6MTczMjg2MDA5Nzg3MSwiZXhwIjoxNzMzNDY0ODk3fQ
 
@@ -307,6 +306,9 @@ eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0IiwiY3JlYXRlZCI6MTczMjg2MDA5Nzg3MSwiZXhwIjo
 eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0IiwiY3JlYXRlZCI6MTczMjg2MDA5Nzg3MSwiZXhwIjoxNzMzNDY0ODk3fQ.qbreR3KtbtwI_vD3ZceZQ1-1SH8wWkhkxRPvf5g-LINsI8Ycbknx3m_KGKxeJN2E4vFTHaufOLArI9l5SejsaA
 
 // 总结，jjwt依赖中的Jwts类生成的JWT，是按照JWT规范生成的，但在生成signature之前对secret进行了某种转换处理，使得生成的JWT与官网生成的JWT在signature上有不同
+
+（Sun Oct 26 2025 20:14:20 GMT+0800 (中国标准时间)）
+eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0IiwiY3JlYXRlZCI6MTc2MDg3NjA2MDMxNiwiZXhwIjoxNzYxNDgwODYwfQ.Usz2cJBbq8Iac-YfuYDRDMcdGiLML9DhVuLzajSLqWZP11ZkY0EO1xFVT-o_72pEyiosmHFnuMa1PMtmn2vOQQ
 ```
 
 ### JWT验证
@@ -514,9 +516,93 @@ public class CommonPage<T> {
 
 ## Swagger文档
 
+文件：`SwaggerProperties.java`、`BaseSwaggerConfig.java`、`SwaggerConfig.java`
 
+- **Spring Boot + Swagger 2（Springfox）** 的配置结构，采用**抽象基类 + 具体实现**的方式，实现了 Swagger 文档的灵活配置
 
+- `SwaggerProperties.java` —— 配置属性封装类
 
+  ```txt
+  apiBasePackage
+  enableSecurity
+  title、description、version、contactName、contactUrl、contactEmail
+  ```
+
+- `BaseSwaggerConfig.java` —— Swagger 配置抽象基类
+
+  ```java
+  public abstract class BaseSwaggerConfig {
+      @Bean
+      // 完整的 Swagger 配置流程（创建 Docket、设置 ApiInfo、安全配置等）
+      public Docket createRestApi() { ... }
+  	
+      // 根据 SwaggerProperties 构建 API 文档基本信息
+      private ApiInfo apiInfo(...) { ... }
+  
+      // 安全认证支持（当 enableSecurity=true 时），定义认证方式和认证路径
+      private List<SecurityScheme> securitySchemes() { ... }
+      private List<SecurityContext> securityContexts() { ... }
+  
+      // 将 可变部分（即具体的配置值）抽象为 swaggerProperties() 方法，由子类实现
+      // 任何继承 BaseSwaggerConfig 的子类，只需提供 SwaggerProperties，即可获得完整的 Swagger 配置。实现解耦和复用
+      public abstract SwaggerProperties swaggerProperties();
+  }
+  ```
+
+- `SwaggerConfig.java` —— 具体 Swagger 配置实现类
+
+  ```java
+  @Configuration // 标识为配置类，程序运行时对swagger的配置由此开始
+  @EnableSwagger2
+  public class SwaggerConfig extends BaseSwaggerConfig {
+      @Override
+      public SwaggerProperties swaggerProperties() {
+          return SwaggerProperties.builder()
+  				.......
+                  .build();
+      }
+  
+      @Bean
+      // 解决 Spring Boot 2.6+ 兼容性问题（关键！）
+      // 从 Spring Boot 2.6 开始，Spring MVC 默认使用 PathPatternParser（而非 AntPathMatcher）。
+  	// 而 Springfox Swagger 2 不兼容 PathPatternParser，会导致启动报错或 API 无法显示。
+  	// springfoxHandlerProviderBeanPostProcessor() 的作用：
+  	// 通过反射获取 handlerMappings。
+  	// 过滤掉使用 PatternParser 的映射（mapping.getPatternParser() == null）。
+  	// 保留传统的 Ant 风格路径匹配，使 Swagger 能正常工作。
+      public static BeanPostProcessor springfoxHandlerProviderBeanPostProcessor() { ... }
+  }
+  ```
+
+- 使用以下路径进入项目swagger文档：`http://ip:port/swagger-ui/index.html`
+
+- 以下路径获取API 的原始 OpenAPI/Swagger 描述：`http://ip:port/v2/api-docs`
+
+- debug：
+
+  一、静态资源访问的指向（该操作在API访问图片中做过）
+
+  ```java
+  @Configuration
+  public class WebConfig implements WebMvcConfigurer {
+      @Override
+      public void addResourceHandlers(ResourceHandlerRegistry registry) {
+          registry.addResourceHandler("/swagger-ui/**")
+                  .addResourceLocations("classpath:/META-INF/resources/webjars/swagger-ui/3.52.5/");
+          registry.addResourceHandler("/webjars/**")
+                  .addResourceLocations("classpath:/META-INF/resources/webjars/");
+      }
+  }
+  ```
+
+  二、路径白名单：以下这些路由无需进行权限验证，加入白名单
+
+  ```txt
+  "/swagger-ui/**"、"/swagger-resources/**"、"/.well-known/**"、"/v2/api-docs"、
+  "/v2/api-docs/**"、"/webjars/**"、"/error"
+  ```
+
+  
 
 ## 自定义异常处理
 
@@ -788,4 +874,23 @@ public class HelloController {
   ```
 
   
+
+### 静态资源路由
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    	// 用于swagger-ui的静态资源获取
+        registry.addResourceHandler("/swagger-ui/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/swagger-ui/3.52.5/");
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
+        
+        // 访问 resources/static/ 文件夹下的资源，包括html、css、js、图片、音视频de
+        registry.addResourceHandler("static/**").addResourceLocations("classpath:/static/");
+    }
+}
+```
 

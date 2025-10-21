@@ -28,7 +28,8 @@ public class SwaggerConfig extends BaseSwaggerConfig {
                 .apiBasePackage("com.mall_tiny.modules")
                 .title("mall_tiny项目骨架")
                 .description("mall_tiny项目骨架相关接口文档")
-                .contactName("baosight")
+                .contactName("lixijun")
+                .contactEmail("lixijun@baosight.com")
                 .version("1.0")
                 .enableSecurity(true)
                 .build();
