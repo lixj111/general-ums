@@ -45,7 +45,7 @@ resources
 
 数据表：与实体类结构相同
 
-<img src="D:\Codes\java\mall_tiny\src\main\resources\mall_tiny.png" alt="mall_tiny.png" style="zoom:90%; float:left;" />
+<img src="img/mall_tiny.png" alt="mall_tiny.png" style="zoom:90%; float:left;" />
 
 
 
@@ -647,11 +647,11 @@ delResourceListByResource(Long resourceId) // 获取拥有某个资源的多个�
 
 getAdminInfo(Principal)?
 
-![image-20241219153313563](C:\Users\李西军\AppData\Roaming\Typora\typora-user-images\image-20241219153313563.png)
+![login](img/login.png)
 
 
 
-![image-20241225164200138](C:\Users\李西军\AppData\Roaming\Typora\typora-user-images\image-20241225164200138.png)
+![refreshToken](img/refreshToken.png)
 
 
 
@@ -888,7 +888,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
         
-        // 访问 resources/static/ 文件夹下的资源，包括html、css、js、图片、音视频de
+        // 访问 resources/static/ 文件夹下的资源，包括html、css、js、图片、音视频等
         registry.addResourceHandler("static/**").addResourceLocations("classpath:/static/");
     }
 }
