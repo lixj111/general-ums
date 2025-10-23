@@ -22,7 +22,7 @@ public class DynamicSecurityMetadataSource implements FilterInvocationSecurityMe
     private DynamicSecurityService dynamicSecurityService;
 
     @PostConstruct // 标识一个方法应该在依赖注入完成后立即被调用
-    private void loadDatSource() {
+    private void loadDataSource() {
         // 获取数据库中的所有 resource 作为configAttributeMap
         configAttributeMap = dynamicSecurityService.loadDataSource();
     }
@@ -36,7 +36,7 @@ public class DynamicSecurityMetadataSource implements FilterInvocationSecurityMe
     // use in DynamicSecurityFilter.java    // InterceptorStatusToken token = super.beforeInvocation(fi);
     @Override
     public Collection<ConfigAttribute> getAttributes(Object object) throws IllegalArgumentException {
-        if (configAttributeMap == null) this.loadDatSource();
+        if (configAttributeMap == null) this.loadDataSource();
         List<ConfigAttribute> configAttributes = new ArrayList<>();
         // 获取当前访问的路径。先将object转为 FilterInvocation 类，然后获取完整的url，从http到最后
         String url = ((FilterInvocation) object).getRequestUrl();

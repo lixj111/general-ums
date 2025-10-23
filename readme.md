@@ -392,7 +392,7 @@ public class RedisCacheAspect {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisCacheAspect.class);
 
     // TODO: security??? 待修改表达式中的security
-    @Pointcut("execution(public * com.mall_tiny.security.*CacheService.*(..))")
+    @Pointcut("execution(public * com.mall_tiny.modules.*CacheService.*(..))")
     // 定义了一个切入点表达式，它指定了哪些方法是这个切面的目标。
     // 这里的表达式匹配的是所有在 com.mall_tiny.security 包下以 CacheService 结尾的类中的公共方法
     public void cacheAspect() {
@@ -580,7 +580,7 @@ public class CommonPage<T> {
 
 - debug：
 
-  一、静态资源访问的指向（该操作在API访问图片中做过）
+  一、静态资源访问的指向（该操作常在API访问静态资源时使用，如html、css、js、图片、音视频等）
 
   ```java
   @Configuration
@@ -606,7 +606,81 @@ public class CommonPage<T> {
 
 ## 自定义异常处理
 
+自定义API响应异常：`ApiException.java`、`Asserts.java`、`GlobalExceptionHandler.java`
 
+- `ApiException.java`：自定义业务异常类
+
+  ```java
+  public class ApiException extends RuntimeException {
+      public IErrorCode errorCode;
+      public IErrorCode getErrorCode() { return errorCode; }
+      // 构造方法...
+  }
+  ```
+
+  将业务逻辑中的错误（如“库存不足”、“权限不足”）以**结构化方式**抛出，后续由全局异常处理器统一转为 JSON 响应
+
+- `Asserts.java`：断言工具类（简化异常抛出）
+
+  ```java
+  public class Asserts {
+      public static void fail(String message) { throw new ApiException(message);}
+      public static void fail(IErrorCode errorCode) { 
+          throw new ApiException(errorCode);
+      }
+  }
+  ```
+
+  **提供简洁的“断言失败即抛异常”语法**，避免冗长的 `if + throw`
+
+- `GlobalExceptionHandler.java`：
+
+  ```java
+  @ControllerAdvice
+  public class GlobalExceptionHandler {
+      @ResponseBody
+      @ExceptionHandler(ApiException.class)
+      public CommonResult handle(ApiException e) { ... }
+  
+      @ResponseBody
+      @ExceptionHandler(MethodArgumentNotValidException.class)
+      public CommonResult handleValidException(...) { ... }
+  
+      @ResponseBody
+      @ExceptionHandler(BindException.class)
+      public CommonResult handleValidException(...) { ... }
+  }
+  ```
+
+  1、@ControllerAdvice：全局拦截所有`@Controller`和`@RestController`中派出的异常
+
+  2、处理ApiException：如果包含ErrorCode，调用CommonResult.failed(errorCode)，否则返回纯消息字符串
+
+  3、处理MethodArgumentNotValidException和BindException：参数校验失败
+
+  ```txt
+  @Valid + @RequestBody: 请求体校验失败 -> MethodArgumentNotValidException
+  @Valid + 表单参数（如@ModelAttrib）: 表单校验失败 -> BindException
+  处理流程：获取第一个错误参数 -> 拼接消息：错误参数名 + 默认错误信息 -> 返回验证失败的响应
+  ```
+
+- 实际使用：将`Asserts.java`是为工具类，在任意业务模块中调用：
+
+  ```java
+  // 以登录为例
+  public User login(String username, String password) {
+      if (StringUtils.isEmpty(username)) {
+          Asserts.fail(ResultCode.VALIDATE_FAILED); // 抛 ApiException
+      }
+      User user = userService.findByUsername(username);
+      if (user == null) {
+          Asserts.fail(AuthErrorCode.USER_NOT_FOUND); // 抛 ApiException
+      }
+      // ...
+  }
+  ```
+
+- 该项目使用了`GlobalExceptionHandler.java`对Controller层的异常捕获和抛出，未直接使用`Asserts.java`中的方法
 
 
 
@@ -648,8 +722,6 @@ delResourceListByResource(Long resourceId) // 获取拥有某个资源的多个�
 getAdminInfo(Principal)?
 
 ![login](img/login.png)
-
-
 
 ![refreshToken](img/refreshToken.png)
 
@@ -697,6 +769,11 @@ public class SecurityConfig {
                 .and()
                 .csrf()
                 .disable()
+            	// 新增相应格式相关
+            	.exceptionHandling()
+                .authenticationEntryPoint(restAuthenticationEntryPoint)
+                .accessDeniedHandler(restfulAccessDeniedHandler)
+            	.and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 // 自定义权限拒绝处理类
@@ -729,7 +806,7 @@ public class SecurityConfig {
 
   如果使用该行代码，在`jwtxxx`之前有一个`UsernamePasswordAuthenticationFilter`，按理说在会话管理状态为`STATSLESS`时，只对`POST`请求中携带用户名和密码表单的请求进行拦截处理，对携带`jwt`的请求不处理。实际使用中，发现在`jwtxxxx`过滤器前，`Usernamexxx`过滤器就已经起作用了，将未携带用户名和密码的请求验证失败并将`ROLE_ANONYMOUS`身份的匿名用户放到`SecurityContextHolder`中，导致后续的两个过滤器中用户被识别为匿名用户，无法通过验证。
 
-- `restAuthenticationEntryPoint`和`restfulAccessDeniedHandler`：自定义的认证处理类，`restAuthenticationEntryPoint`用于处理未通过认证的请求的相应；`restfulAccessDeniedHandler`用于处理通过认证的用户但是角色或权限不足的清空，返回自定义的信息及格式。这两个配置需要出现在配置中，上面的程序中为显式调用，将会使用默认的处理类，自定义类将不会生效。
+- `restAuthenticationEntryPoint`和`restfulAccessDeniedHandler`：自定义的认证处理类，`restAuthenticationEntryPoint`用于处理未通过认证的请求的响应；`restfulAccessDeniedHandler`用于处理通过认证的用户但是角色或权限不足的清空，返回自定义的信息及格式。这两个配置需要出现在配置中，显式调用，否则将会使用默认的处理类，自定义类将不会生效。
 
   ```java
   @Bean
@@ -737,8 +814,8 @@ public class SecurityConfig {
       http
           .csrf().disable()
           .exceptionHandling()
-              .authenticationEntryPoint(restAuthenticationEntryPoint) // 设置未认证入口点
-              .accessDeniedHandler(restfulAccessDeniedHandler)     // 设置访问被拒绝处理器
+          .authenticationEntryPoint(restAuthenticationEntryPoint) // 设置未认证入口点
+          .accessDeniedHandler(restfulAccessDeniedHandler)     // 设置访问被拒绝处理器
           .and()
           //xxxxx
       return http.build();
@@ -783,6 +860,64 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 #### jwt认证过滤器
 
+`JwtAuthenticationTokenFilter.java`：基于 JWT（JSON Web Token）的 Spring Security 认证过滤器
+
+- 功能：解析 JWT Token、验证用户身份，并将认证信息注入 Spring Security 上下文
+
+- 在请求到达controller之前执行
+
+- 继承 `OncePerRequestFilter`：确保每个请求只执行一次该过滤器
+
+- 无论是否完成认证，都会进入下一层过滤器。认证失败会在后续拦截
+
+  <img src="img/jwtFilter.png" alt="mall_tiny.png" style="zoom:50%; float:left;" />
+
+- 一些注意事项和误解：
+
+  JWT 的特点：**无状态、每次验证、线程隔离、安全可靠**。
+
+  每个用户的每次请求都是互相独立、线程隔离的，都需要携带token、进行认证，认证信息存入spring security上下文之后，作用域仅为同一请求内的多次方法调用。
+
+  请求接收后，后默认清空认证信息。
+
+
+
+#### dynamicSecurity相关
+
+相关文件：`DynamicSecurityService.java`--`MallSecurityConfig.java`、`DynamicSecurityMetadataSource.java`、`DynamicAccessDecisionManager.java`、`DynamicSecurityFilter`
+
+整体架构：
+
+<img src="img/SecurityConfig.png" alt="SecurityConfig.png" style="zoom:70%; float:left;" />
+
+
+
+`dynamicSecurityFilter`:
+
+<img src="img/dynamicSecurityFilter.png" alt="dynamicSecurityFilter.png" style="zoom:70%; float:left;" />
+
+- 通过以下方式实现**动态权限**：权限规则存储在数据库中、每次请求时动态查询“该 URL 需要哪些权限”、与当前用户拥有的权限比对，决定是否放行
+
+- 避免spring security权限控制写死：**无法在运行时修改权限规则**
+
+  ```java
+  http.authorizeHttpRequests(auth -> auth
+      .requestMatchers("/admin/**").hasRole("ADMIN")
+      .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+  );
+  ```
+
+- `DynamicSecurityMetadataSource`（动态元数据源）：根据当前请求的 URL，动态返回该 URL 所需的权限集合
+
+- `DynamicAccessDecisionManager`（动态决策管理器）：决定当前用户是否拥有访问该资源所需的权限
+
+- `doFilter`工作流：
+
+  - 一、封装请求为 `FilterInvocation`
+  - 二、放行特殊请求：OPTIONS请求、白名单url等
+  - 三、触发 Spring Security 核心鉴权流程：`super.beforeInvocation(fi)`
+  
+- 总结：**在每次请求时，动态查询该 URL 所需的权限，并与当前用户权限比对，从而实现无需重启即可更新权限规则的动态鉴权机制。**
 
 
 
